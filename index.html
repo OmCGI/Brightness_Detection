@@ -25,14 +25,18 @@
             <li class="text-xs">Adjust the lighting based on the feedback provided.</li>
             <li class="text-xs">Ensure your camera is facing the right direction.</li>
             <li class="text-xs">Click <strong>"Allow"</strong> to access the camera.</li>
-            <li class="text-xs"> Rotate your device in <strong>Portrate</strong> mode</li>
+
 
         </ul>
         <button id="fullscreen-btn" class="mt-4 px-4 py-2 bg-black text-white rounded text-sm">Accept</button>
-
+        <p id="data_show" class="text-xs hidden landscape:hidden mt-5"> Rotate your device in <strong>Portrate</strong>
+            mode
+        </p>
     </div>
-    <div class="view relative hideen landscape:block w-full h-full   ">
-        <video id="video" width="640" class="w-full h-full" height="480" autoplay></video>
+    <div class="view relative hideen landscape:block w-screen h-screen  object-fill
+ ">
+        <video id="video" width="640" class="w-screen h-screen object-fill
+" height="480" autoplay></video>
         <div class=" bg-opacity-50 text-sm  w-auto absolute top-10 z-0">
             <p id="prompt" class="text-black bg-[#fffff0]/90 px-2"></p>
             <span id="data" class="bg-[#fffff0] px-2"></span>
@@ -60,6 +64,9 @@
 
         // Add event listener to the fullscreen button
         fullscreenBtn.addEventListener('click', () => {
+            var data_show = document.getElementById('data_show');
+            data_show.classList.remove('hidden');
+
             goFullScreen();
             // Start the camera stream
             navigator.mediaDevices.getUserMedia({
