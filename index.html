@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <title>Camera Brightness Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+
+
+
+    <div
+        class="overlay landscape:hidden fixed top-0 pl-5 left-0 w-full h-full bg-[#fffff0] bg-opacity-50 flex flex-col items-start justify-center text-dark text-center z-10">
+        <h1 class="text-xl font-semibold mb-3">Camera Brightness Detection</h1>
+        <ul class="text-sm text-left list-disc ml-4">
+
+            <li class="text-xs">Adjust the lighting based on the feedback provided.</li>
+            <li class="text-xs">Ensure your camera is facing the right direction.</li>
+            <li class="text-xs">Click <strong>"Allow"</strong> to access the camera.</li>
+            <li class="text-xs"> Rotate your device in <strong>Portrate</strong> mode</li>
+
+        </ul>
+        <button id="fullscreen-btn" class="mt-4 px-4 py-2 bg-black text-white rounded text-sm">Accept</button>
+
+    </div>
+    <div class="view relative hideen landscape:block w-full h-full   ">
+        <video id="video" width="640" class="w-full h-full" height="480" autoplay></video>
+        <div class=" bg-opacity-50 text-sm  w-auto absolute top-10 z-0">
+            <p id="prompt" class="text-black bg-[#fffff0]/90 px-2"></p>
+            <span id="data" class="bg-[#fffff0] px-2"></span>
+
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const prompt = document.getElementById('prompt');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+        // Function to request fullscreen
+        function goFullScreen() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari, Opera
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                document.documentElement.msRequestFullscreen();
+            }
+        }
+
+        // Add event listener to the fullscreen button
+        fullscreenBtn.addEventListener('click', () => {
+            goFullScreen();
+            // Start the camera stream
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    facingMode: { exact: "environment" } // Access back camera
+                }
+            })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(err => {
+                    console.error("Error accessing the camera: ", err);
+                });
+        });
+
+        function getAverageBrightness(data, width, height) {
+            let colorSum = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+                let avg = (r + g + b) / 3;
+                colorSum += avg;
+            }
+            return colorSum / (width * height);
+        }
+
+        function analyzeBrightness() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+            const avgBrightness = getAverageBrightness(frame.data, canvas.width, canvas.height);
+
+            // Updated thresholds
+            const veryLowLight = 30;
+            const lowLightThreshold = 80;
+            const highLightThreshold = 150;
+            const veryHighLight = 220;
+
+            // Updated logic
+            if (avgBrightness < veryLowLight) {
+                prompt.textContent = "Very Dark: Please increase the lighting significantly.";
+                prompt.className = "text-black bg-red-400 px-2"; // Add background class for slightly bright
+            } else if (avgBrightness < lowLightThreshold) {
+                prompt.textContent = "Slightly Dark: Consider adding a bit more light.";
+                prompt.className = "text-black bg-red-400 px-2"; // Add background class for bit more light.
+
+            } else if (avgBrightness <= highLightThreshold) {
+                prompt.textContent = "Perfect lighting!";
+                prompt.className = "text-black bg-white px-2"; // "Perfect lighting!
+            } else if (avgBrightness < veryHighLight) {
+                prompt.textContent = "Slightly Bright: You might want to reduce light slightly.";
+                prompt.className = "text-black bg-yellow-200 px-2"; // Add background class for slightly bright
+            } else {
+                prompt.textContent = "Very Bright: Please reduce the lighting.";
+                prompt.className = "text-white bg-red-500 px-2"; // Add background class for very bright
+            }
+
+
+            // Append avgBrightness value to the prompt
+            const dataElement = document.getElementById('data');
+            dataElement.textContent = `${avgBrightness.toFixed(2)}`;
+        }
+
+        video.addEventListener('play', () => {
+            setInterval(analyzeBrightness, 1000);
+        });
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Lexend Deca', sans-serif;
+         }
+        @theme {
+            --color-clifford: #da373d;
+          }
+        </style>
+</body>
+
+</html>
