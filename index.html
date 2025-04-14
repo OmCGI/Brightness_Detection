@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
     <title>Camera Brightness Detection</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,10 +12,6 @@
 </head>
 
 <body>
-
-
-
-
     <div
         class="overlay landscape:hidden fixed top-0 pl-5 left-0 w-full h-full bg-[#fffff0] bg-opacity-50 flex flex-col items-start justify-center text-dark text-center z-10">
         <h1 class="text-xl font-semibold mb-3">Camera Brightness Detection</h1>
@@ -35,8 +30,7 @@
     </div>
     <div class="view relative hideen landscape:block w-screen h-screen  object-fill
  ">
-        <video id="video" width="640" class="w-screen h-screen object-fill
-" height="480" autoplay></video>
+        <video id="video" width="640" class="w-screen h-screen object-fill" height="480" autoplay muted></video>
         <div class=" bg-opacity-50 text-sm  w-auto absolute top-10 z-0">
             <p id="prompt" class="text-black bg-[#fffff0]/90 px-2"></p>
             <span id="data" class="bg-[#fffff0] px-2"></span>
@@ -54,7 +48,9 @@
 
         // Function to request fullscreen
         function goFullScreen() {
-            if (document.documentElement.requestFullscreen) {
+            if (video.webkitEnterFullscreen) {
+                video.webkitEnterFullscreen(); // iOS-specific fullscreen
+            } else if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen();
             } else if (document.documentElement.mozRequestFullScreen) { // Firefox
                 document.documentElement.mozRequestFullScreen();
@@ -85,6 +81,15 @@
                 .catch(err => {
                     console.error("Error accessing the camera: ", err);
                 });
+        });
+
+        window.addEventListener('orientationchange', () => {
+            const dataShow = document.getElementById('data_show');
+            if (window.orientation === 0 || window.orientation === 180) {
+                dataShow.classList.remove('hidden'); // Portrait mode
+            } else {
+                dataShow.classList.add('hidden'); // Landscape mode
+            }
         });
 
         function getAverageBrightness(data, width, height) {
